@@ -172,8 +172,8 @@ def generate_and_execute_query(prompt_engine, dbms_type, question):
                     connection_args = {
                         "host": ss.get("db_ip", "localhost"),
                         "port": ss.get("db_port", "7687"),
-                        "user": ss.get("db_user"),
-                        "password": ss.get("db_password"),
+                        "user": ss.get("db_user", "neo4j"),
+                        "password": ss.get("db_password", "neo4j"),
                         "db_name": ss.get("db_name", "neo4j"),
                     }
                     grounded_question, grounded_entities = ground_entities_in_question(
