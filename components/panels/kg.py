@@ -1,7 +1,7 @@
 import re
 
 import streamlit as st
-from biochatter.kg_grounding import ground_entities_in_question
+#from biochatter.kg_grounding import ground_entities_in_question
 from biochatter.prompts import BioCypherPromptEngine
 
 from components.handlers import (
@@ -128,10 +128,20 @@ def create_prompt_engine():
                 )
             return ss.conversation
 
+    connection_args = {
+        "host": ss.get("db_ip", "localhost"),
+        "port": ss.get("db_port", "7687"),
+        "user": ss.get("db_user", "neo4j"),
+        "password": ss.get("db_password", "neo4j"),
+        "db_name": ss.get("db_name", "neo4j"),
+    }
     return BioCypherPromptEngine(
         schema_config_or_info_dict=ss.schema_dict,
         conversation_factory=conversation_factory,
+        connection_args=connection_args,
+        use_grounding=True,
     )
+    
 
 
 def _clean_query(query: str) -> str:
@@ -168,23 +178,23 @@ def generate_and_execute_query(prompt_engine, dbms_type, question):
         with st.spinner("Generating query ..."):
             if dbms_type == "Neo4j":
                 try:
-                    # ── grounding step ─────────────────────────────────────
-                    connection_args = {
-                        "host": ss.get("db_ip", "localhost"),
-                        "port": ss.get("db_port", "7687"),
-                        "user": ss.get("db_user", "neo4j"),
-                        "password": ss.get("db_password", "neo4j"),
-                        "db_name": ss.get("db_name", "neo4j"),
-                    }
-                    grounded_question, grounded_entities = ground_entities_in_question(
-                        question=question,
-                        connection_args=connection_args,
-                        schema=ss.schema_dict,
-                    )
+                    # # ── grounding step ─────────────────────────────────────
+                    # connection_args = {
+                    #     "host": ss.get("db_ip", "localhost"),
+                    #     "port": ss.get("db_port", "7687"),
+                    #     "user": ss.get("db_user", "neo4j"),
+                    #     "password": ss.get("db_password", "neo4j"),
+                    #     "db_name": ss.get("db_name", "neo4j"),
+                    # }
+                    # grounded_question, grounded_entities = ground_entities_in_question(
+                    #     question=question,
+                    #     connection_args=connection_args,
+                    #     schema=ss.schema_dict,
+                    # )
 
                     # ── query generation ────────────────────────────────────
                     ss.current_query = prompt_engine.generate_query(
-                        grounded_question, dbms_type
+                        question, dbms_type
                     )
 
                     # ── clean up LLM response ───────────────────────────────
