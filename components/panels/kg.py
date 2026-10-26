@@ -2,6 +2,7 @@ import re
 
 import streamlit as st
 #from biochatter.kg_grounding import ground_entities_in_question
+from biochatter.kg_provenance import query_sources
 from biochatter.prompts import BioCypherPromptEngine
 
 from components.handlers import (
@@ -15,6 +16,9 @@ from components.kg import (
 )
 
 ss = st.session_state
+
+# data_sources values that come from outside the project, shown with a label
+EXTERNAL_SOURCES = {"CKG": "Clinical Knowledge Graph, external"}
 
 
 def display_info():
@@ -257,9 +261,28 @@ def display_query_results(result):
     except TypeError:
         st.error("No results to display.")
 
+    display_query_sources()
+
     if ss.get("schema_dict"):
         st.markdown("### Schema Info")
         st.write(ss.schema_dict)
+
+
+def display_query_sources():
+    """Show which data sources the current query's results come from."""
+    if not ss.get("current_query") or not ss.get("neodriver"):
+        return
+    try:
+        sources = query_sources(ss.current_query, lambda q: _run_neo4j_query(q)[0] or [])
+    except Exception:
+        return  # provenance is informational; never block the results
+    if not sources:
+        return
+
+    st.markdown("### Sources")
+    for source, elements in sources.items():
+        label = f"{source} ({EXTERNAL_SOURCES[source]})" if source in EXTERNAL_SOURCES else source
+        st.markdown(f"- **{label}**: {', '.join(elements)}")
 
 
 def kg_panel():
